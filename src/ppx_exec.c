@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ppx_exec_utils.c                                   :+:      :+:    :+:   */
+/*   ppx_exec.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: xlamiel- <xlamiel-@student.42barcelona.com>+#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -12,32 +12,19 @@
 
 #include "pipex.h"
 
-void	ft_free_words(char **arr)
-{
-	int	i;
-
-	if (arr == NULL)
-		return ;
-	i = 0;
-	while (arr[i] != NULL)
-	{
-		free(arr[i]);
-		i++;
-	}
-	free(arr);
-}
-
-static char	**parse_command_simple(char *argv)
+static char	**parse_command(char *argv)
 {
 	char	**cmd;
 	char	*trimmed;
 	int		i;
 
+	if (!argv)
+		error_message("Error: no command provided", 1);
 	cmd = ft_split_quotes(argv);
 	if (!cmd || !cmd[0])
 	{
 		ft_free_words(cmd);
-		return (NULL);
+		error_message("Error: invalid command", 127);
 	}
 	i = 0;
 	while (cmd[i])
@@ -46,25 +33,10 @@ static char	**parse_command_simple(char *argv)
 		if (!trimmed)
 		{
 			ft_free_words(cmd);
-			return (NULL);
+			error_message("Error: memory allocation failed", 1);
 		}
 		cmd[i] = trimmed;
 		i++;
-	}
-	return (cmd);
-}
-
-static char	**parse_command(char *argv)
-{
-	char	**cmd;
-
-	if (!argv)
-		error_message("Error: no command provided", 1);
-	cmd = parse_command_simple(argv);
-	if (!cmd || !cmd[0])
-	{
-		ft_free_words(cmd);
-		error_message("Error: invalid command", 127);
 	}
 	return (cmd);
 }
@@ -80,15 +52,20 @@ static void	execve_with_error(char *path, char **cmd, char *envp[])
 	}
 }
 
-void	execute_cmd(char *argv, char *envp[])
+static void	handle_cmd_not_found(char *cmd_name, char **cmd)
 {
-	char	**cmd;
+	write(2, cmd_name, ft_strlen(cmd_name));
+	write(2, ": command not found\n", 20);
+	free(cmd_name);
+	ft_free_words(cmd);
+	exit(127);
+}
+
+static void	prep_and_exec(char **cmd, char *envp[])
+{
 	char	*path;
 	char	*cmd_name;
 
-	if (!argv || !envp)
-		error_message("Error: no arguments/envp", 1);
-	cmd = parse_command(argv);
 	cmd_name = ft_strdup(cmd[0]);
 	if (!cmd_name)
 	{
@@ -98,12 +75,18 @@ void	execute_cmd(char *argv, char *envp[])
 	path = get_path(cmd[0], envp);
 	if (!path)
 	{
-		write(2, cmd_name, ft_strlen(cmd_name));
-		write(2, ": command not found\n", 20);
-		free(cmd_name);
-		ft_free_words(cmd);
-		exit(127);
+		handle_cmd_not_found(cmd_name, cmd);
 	}
 	free(cmd_name);
 	execve_with_error(path, cmd, envp);
+}
+
+void	execute_cmd(char *argv, char *envp[])
+{
+	char	**cmd;
+
+	if (!argv || !envp)
+		error_message("Error: no arguments/envp", 1);
+	cmd = parse_command(argv);
+	prep_and_exec(cmd, envp);
 }

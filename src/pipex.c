@@ -12,12 +12,17 @@
 
 #include "pipex.h"
 
+/*
+
+	envp: environment variables.
+
+*/
+
 int	main(int argc, char *argv[], char *envp[])
 {
 	int		pipe_fd[2];
 	pid_t	pid1;
 	pid_t	pid2;
-	int		status;
 
 	if (argc != 5)
 		error_message("Usage: ./pipex infile cmd1 cmd2 outfile", 1);
@@ -33,11 +38,5 @@ int	main(int argc, char *argv[], char *envp[])
 		error_message("Error: fork failed for cmd2.", 1);
 	if (pid2 == 0)
 		right_process(argv, envp, pipe_fd);
-	close(pipe_fd[0]);
-	close(pipe_fd[1]);
-	waitpid(pid1, NULL, 0);
-	waitpid(pid2, &status, 0);
-	if (WIFEXITED(status))
-		return (WEXITSTATUS(status));
-	return (1);
+	return (close_pipe_and_wait(pipe_fd, pid1, pid2));
 }

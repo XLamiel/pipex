@@ -1,2 +1,0 @@
-Primera linea de datos
-Segunda linea de datos

@@ -66,10 +66,13 @@ RESET		:= \033[0m
 SRC			:= \
 	$(SRC_DIR)/pipex.c \
 	$(SRC_DIR)/ppx_error.c \
-	$(SRC_DIR)/ppx_exec_utils.c \
-	$(SRC_DIR)/ppx_path_utils.c \
+	$(SRC_DIR)/ppx_exec.c \
+	$(SRC_DIR)/ppx_io.c \
+	$(SRC_DIR)/ppx_memory.c \
+	$(SRC_DIR)/ppx_path.c \
 	$(SRC_DIR)/ppx_process.c \
-	$(SRC_DIR)/ppx_split_quotes.c
+	$(SRC_DIR)/ppx_split_utils.c \
+	$(SRC_DIR)/ppx_split_helpers.c
 
 ###############################################################################
 # 🔧 Derived File Lists

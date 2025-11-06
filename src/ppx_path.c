@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ppx_path_utils.c                                   :+:      :+:    :+:   */
+/*   ppx_path.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: xlamiel- <xlamiel-@student.42barcelona.com>+#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -12,9 +12,9 @@
 
 #include "pipex.h"
 
-static char **get_env_paths(char *envp[])
+static char	**get_env_paths(char *envp[])
 {
-	int i;
+	int	i;
 
 	i = 0;
 	while (envp[i] && ft_strncmp(envp[i], "PATH=", 5) != 0)
@@ -24,10 +24,10 @@ static char **get_env_paths(char *envp[])
 	return (ft_split(envp[i] + 5, ':'));
 }
 
-static char *join_path_cmd(char *directory, char *cmd)
+static char	*join_path_cmd(char *directory, char *cmd)
 {
-	char *temp;
-	char *full_path;
+	char	*temp;
+	char	*full_path;
 
 	temp = ft_strjoin(directory, "/");
 	if (!temp)
@@ -37,34 +37,40 @@ static char *join_path_cmd(char *directory, char *cmd)
 	return (full_path);
 }
 
-char *get_path(char *cmd, char *envp[])
+static char	*get_valid_path_from_env(char **paths, char *cmd)
 {
-	char **paths;
-	char *full_path;
-	int i;
+	char	*full_path;
+	int		i;
 
-	if (access(cmd, F_OK | X_OK) == 0)
-		return (ft_strdup(cmd));
-	paths = get_env_paths(envp);
-	if (!paths)
-		return (NULL);
 	i = 0;
 	while (paths[i])
 	{
 		full_path = join_path_cmd(paths[i], cmd);
 		if (!full_path)
 		{
-			ft_free_words(paths);
 			return (NULL);
 		}
 		if (access(full_path, F_OK | X_OK) == 0)
 		{
-			ft_free_words(paths);
 			return (full_path);
 		}
 		free(full_path);
 		i++;
 	}
-	ft_free_words(paths);
 	return (NULL);
+}
+
+char	*get_path(char *cmd, char *envp[])
+{
+	char	**paths;
+	char	*full_path;
+
+	if (access(cmd, F_OK | X_OK) == 0)
+		return (ft_strdup(cmd));
+	paths = get_env_paths(envp);
+	if (!paths)
+		return (NULL);
+	full_path = get_valid_path_from_env(paths, cmd);
+	ft_free_words(paths);
+	return (full_path);
 }
